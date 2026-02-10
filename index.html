@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5ive - UX Sample</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f9fafb;
+    }
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      text-align: center;
+    }
+    /* Good UX: Clear focus styles for keyboard users */
+    button:focus-visible {
+      outline: 2px solid #2563eb;
+      outline-offset: 2px;
+    }
+    .btn {
+      background-color: #2563eb;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      border: none;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      min-width: 12rem; /* Prevents layout shift during loading */
+    }
+    .btn:hover {
+      background-color: #1d4ed8;
+    }
+    .btn:active {
+      background-color: #1e40af;
+    }
+    .btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    .btn:disabled:hover {
+      background-color: #2563eb; /* Maintain original color on disabled hover */
+    }
+    .spinner {
+      display: inline-block;
+      width: 1em;
+      height: 1em;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      vertical-align: text-bottom;
+      margin-right: 0.5rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .feedback {
+      margin-top: 1rem;
+      min-height: 1.5rem; /* Prevents layout shift */
+      color: #15803d; /* green-700, good contrast on white */
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>Welcome to 5ive</h1>
+    <p>Sample accessible button component:</p>
+
+    <!-- ✅ GOOD UX: Semantic button with proper labeling and focus handling -->
+    <button type="button" class="btn" id="action-btn">
+      Process Request
+    </button>
+
+    <div id="feedback" class="feedback" aria-live="polite"></div>
+
+    <p><small>Try navigating to this button using the 'Tab' key.</small></p>
+  </main>
+
+  <script>
+    const actionBtn = document.getElementById('action-btn');
+    const feedback = document.getElementById('feedback');
+
+    actionBtn.addEventListener('click', () => {
+      // Set loading state
+      const originalContent = actionBtn.innerHTML;
+      actionBtn.disabled = true;
+      actionBtn.setAttribute('aria-busy', 'true');
+      actionBtn.innerHTML = '<span class="spinner" aria-hidden="true"></span>Loading...';
+      feedback.textContent = '';
+
+      // Simulate async operation
+      setTimeout(() => {
+        // Reset state
+        actionBtn.disabled = false;
+        actionBtn.removeAttribute('aria-busy');
+        actionBtn.innerHTML = originalContent;
+
+        // Show success
+        feedback.textContent = 'Action triggered successfully!';
+
+        // Clear message after 5 seconds (better accessibility)
+        setTimeout(() => {
+          feedback.textContent = '';
+        }, 5000);
+      }, 1500);
+    });
+  </script>
+</body>
+</html>
