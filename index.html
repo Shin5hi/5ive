@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline';">
+  <title>5ive - Secure Sample</title>
+  <style>
+    body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f9fafb; }
+    .container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
+    .btn { background-color: #2563eb; color: white; padding: 0.5rem 1rem; border-radius: 0.375rem; border: none; cursor: pointer; }
+    .feedback { margin-top: 1rem; color: #15803d; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>Secure Component</h1>
+    <button type="button" class="btn" id="action-btn">Process Request</button>
+    <div id="feedback" class="feedback" aria-live="polite"></div>
+  </main>
+  <script>
+    const actionBtn = document.getElementById('action-btn');
+    const feedback = document.getElementById('feedback');
+    actionBtn.addEventListener('click', () => {
+      // ✅ GOOD: Using textContent to prevent XSS
+      feedback.textContent = 'Action completed successfully!';
+    });
+  </script>
+</body>
+</html>
