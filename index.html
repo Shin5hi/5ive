@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline';">
+  <title>5ive - UX Sample</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f9fafb;
+    }
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      text-align: center;
+    }
+    /* Good UX: Clear focus styles for keyboard users */
+    button:focus-visible {
+      outline: 2px solid #2563eb;
+      outline-offset: 2px;
+    }
+    .btn {
+      background-color: #2563eb;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      border: none;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .btn:hover {
+      background-color: #1d4ed8;
+    }
+    .btn:active {
+      background-color: #1e40af;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      display: inline-block;
+      width: 1em;
+      height: 1em;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      vertical-align: text-bottom;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Toast Notification Styles */
+    #toast-container {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      pointer-events: none;
+    }
+
+    .toast {
+      background-color: #1f2937;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      font-size: 0.875rem;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(1rem);
+      animation: toast-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .toast-close {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.7);
+      cursor: pointer;
+      font-size: 1.25rem;
+      padding: 0;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+    }
+
+    .toast-close:hover {
+      color: white;
+    }
+
+    @keyframes toast-enter {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes toast-exit {
+      to {
+        opacity: 0;
+        transform: translateY(1rem);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome to 5ive</h1>
+    <p>Sample accessible button component:</p>
+
+    <!-- ✅ GOOD UX: Semantic button with proper labeling and focus handling -->
+    <button type="button" class="btn" id="action-btn">
+      Click Me (Accessible)
+    </button>
+
+    <p><small>Try navigating to this button using the 'Tab' key.</small></p>
+  </div>
+
+  <!-- Accessible Toast Container -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <script>
+    // ✅ Sentinel: Using event listeners instead of inline onclick handlers for better security
+    const actionBtn = document.getElementById('action-btn');
+
+    actionBtn.addEventListener('click', () => {
+      // 1. Set loading state
+      const originalContent = actionBtn.innerHTML;
+      actionBtn.disabled = true;
+      actionBtn.setAttribute('aria-busy', 'true');
+      actionBtn.innerHTML = '<span class="spinner" aria-hidden="true"></span>Processing...';
+
+      // 2. Simulate async operation
+      setTimeout(() => {
+        // 3. Reset state
+        actionBtn.disabled = false;
+        actionBtn.removeAttribute('aria-busy');
+        actionBtn.innerHTML = originalContent;
+
+        // 4. Show toast
+        showToast('Action triggered!');
+      }, 1000);
+    });
+
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+
+      const text = document.createElement('span');
+      text.textContent = message;
+      toast.appendChild(text);
+
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'toast-close';
+      // ✅ Sentinel: Using textContent instead of innerHTML to prevent XSS
+      closeBtn.textContent = '×';
+      closeBtn.setAttribute('aria-label', 'Close notification');
+      toast.appendChild(closeBtn);
+
+      container.appendChild(toast);
+
+      const removeToast = () => {
+        if (toast.classList.contains('removing')) return;
+        toast.classList.add('removing');
+
+        toast.style.animation = 'toast-exit 0.3s ease-in forwards';
+        toast.addEventListener('animationend', () => {
+          if (container.contains(toast)) {
+            container.removeChild(toast);
+          }
+        });
+      };
+
+      const timeoutId = setTimeout(removeToast, 5000);
+
+      closeBtn.onclick = () => {
+        clearTimeout(timeoutId);
+        removeToast();
+      };
+    }
+  </script>
+</body>
+</html>
