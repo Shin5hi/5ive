@@ -100,6 +100,15 @@
       display: flex;
       align-items: center;
     }
+    kbd {
+      background-color: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 0.1em 0.4em;
+      font-family: inherit;
+      font-size: 0.85em;
+      color: #475569;
+    }
   </style>
 </head>
 <body>
@@ -108,19 +117,30 @@
     <p>Sample accessible button component:</p>
 
     <!-- ✅ GOOD UX: Semantic button with proper labeling and focus handling -->
-    <button type="button" class="btn" id="action-btn">
+    <button type="button" class="btn" id="action-btn" aria-keyshortcuts="Control+Enter">
       Click Me (Accessible)
     </button>
 
     <div id="feedback" class="feedback" aria-live="polite"></div>
 
-    <p><small>Try navigating to this button using the 'Tab' key.</small></p>
+    <p><small>Try navigating to this button using the 'Tab' key, or press <kbd>Ctrl</kbd> + <kbd>Enter</kbd>.</small></p>
   </main>
 
   <script>
     const actionBtn = document.getElementById('action-btn');
     const feedback = document.getElementById('feedback');
     let feedbackTimeout;
+
+    // Global keyboard shortcut
+    document.addEventListener('keydown', (e) => {
+      // Check for Ctrl+Enter (Windows/Linux) or Cmd+Enter (Mac)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        if (!actionBtn.disabled) {
+          e.preventDefault();
+          actionBtn.click();
+        }
+      }
+    });
 
     actionBtn.addEventListener('click', () => {
       // Clear any existing timeout
