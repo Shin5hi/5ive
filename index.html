@@ -100,6 +100,24 @@
       display: flex;
       align-items: center;
     }
+    .shortcut-hint {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+    kbd {
+      background-color: #f3f4f6;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+      color: #374151;
+      display: inline-block;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.75rem;
+      line-height: 1;
+      padding: 0.1rem 0.3rem;
+      margin: 0 0.1rem;
+    }
   </style>
 </head>
 <body>
@@ -108,9 +126,13 @@
     <p>Sample accessible button component:</p>
 
     <!-- ✅ GOOD UX: Semantic button with proper labeling and focus handling -->
-    <button type="button" class="btn" id="action-btn">
+    <button type="button" class="btn" id="action-btn" aria-keyshortcuts="Control+Enter">
       Click Me (Accessible)
     </button>
+
+    <p class="shortcut-hint">
+      Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd>
+    </p>
 
     <div id="feedback" class="feedback" aria-live="polite"></div>
 
@@ -119,6 +141,18 @@
 
   <script>
     const actionBtn = document.getElementById('action-btn');
+
+    // ✅ Good UX: Keyboard shortcut for power users
+    document.addEventListener('keydown', (e) => {
+      // Support Ctrl+Enter (Windows/Linux) or Cmd+Enter (Mac)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        if (!actionBtn.disabled) {
+          e.preventDefault(); // Prevent default browser behavior
+          actionBtn.focus();  // Move focus to button
+          actionBtn.click();  // Trigger click
+        }
+      }
+    });
     const feedback = document.getElementById('feedback');
     let feedbackTimeout;
 
