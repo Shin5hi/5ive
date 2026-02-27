@@ -100,6 +100,15 @@
       display: flex;
       align-items: center;
     }
+    .btn kbd {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-left: 0.5rem;
+      padding: 0.125rem 0.375rem;
+      font-size: 0.75em;
+      font-family: inherit;
+    }
   </style>
 </head>
 <body>
@@ -108,8 +117,8 @@
     <p>Sample accessible button component:</p>
 
     <!-- ✅ GOOD UX: Semantic button with proper labeling and focus handling -->
-    <button type="button" class="btn" id="action-btn">
-      Click Me (Accessible)
+    <button type="button" class="btn" id="action-btn" aria-keyshortcuts="Control+Enter Meta+Enter">
+      Click Me (Accessible) <kbd>Ctrl + ↵</kbd>
     </button>
 
     <div id="feedback" class="feedback" aria-live="polite"></div>
@@ -122,6 +131,17 @@
     const feedback = document.getElementById('feedback');
     let feedbackTimeout;
 
+    // Global keyboard listener
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        if (!actionBtn.disabled) {
+          e.preventDefault();
+          actionBtn.focus();
+          actionBtn.click();
+        }
+      }
+    });
+
     actionBtn.addEventListener('click', () => {
       // Clear any existing timeout
       if (feedbackTimeout) clearTimeout(feedbackTimeout);
@@ -132,7 +152,7 @@
 
       // Set loading state
       // ✅ Sentinel: Avoid innerHTML to prevent XSS
-      const originalText = actionBtn.textContent;
+      const originalChildren = Array.from(actionBtn.childNodes);
       actionBtn.disabled = true;
       actionBtn.setAttribute('aria-busy', 'true');
       actionBtn.textContent = '';
@@ -148,7 +168,8 @@
         // Reset state
         actionBtn.disabled = false;
         actionBtn.removeAttribute('aria-busy');
-        actionBtn.textContent = originalText;
+        actionBtn.textContent = '';
+        originalChildren.forEach(child => actionBtn.appendChild(child));
 
         // Show success with icon and transition
         // ✅ Sentinel: Using textContent and DOM methods instead of innerHTML
