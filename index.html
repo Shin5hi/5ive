@@ -37,6 +37,11 @@
       font-weight: 500;
       cursor: pointer;
       transition: background-color 0.2s;
+      min-width: 240px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
     }
     .btn:hover {
       background-color: #1d4ed8;
@@ -100,6 +105,14 @@
       display: flex;
       align-items: center;
     }
+    .kbd-hint {
+      font-family: inherit;
+      font-size: 0.75rem;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      padding: 0.1rem 0.3rem;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
   </style>
 </head>
 <body>
@@ -108,19 +121,32 @@
     <p>Sample accessible button component:</p>
 
     <!-- ✅ GOOD UX: Semantic button with proper labeling and focus handling -->
-    <button type="button" class="btn" id="action-btn">
-      Click Me (Accessible)
+    <button type="button" class="btn" id="action-btn" aria-keyshortcuts="Control+Enter Meta+Enter">
+      Click Me <kbd class="kbd-hint" aria-hidden="true">⌘/Ctrl+Enter</kbd>
     </button>
 
     <div id="feedback" class="feedback" aria-live="polite"></div>
 
-    <p><small>Try navigating to this button using the 'Tab' key.</small></p>
+    <p><small>Try navigating to this button using the 'Tab' key, or press ⌘/Ctrl+Enter.</small></p>
   </main>
 
   <script>
     const actionBtn = document.getElementById('action-btn');
     const feedback = document.getElementById('feedback');
     let feedbackTimeout;
+
+    // Pre-create elements for better performance
+    const spinner = document.createElement('span');
+    spinner.className = 'spinner';
+    spinner.setAttribute('aria-hidden', 'true');
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        actionBtn.focus();
+        actionBtn.click();
+      }
+    });
 
     actionBtn.addEventListener('click', () => {
       // Clear any existing timeout
@@ -131,15 +157,12 @@
       feedback.textContent = '';
 
       // Set loading state
-      // ✅ Sentinel: Avoid innerHTML to prevent XSS
-      const originalText = actionBtn.textContent;
+      // ✅ Sentinel: Avoid innerHTML to prevent XSS. Use childNodes to preserve nested HTML tags like <kbd>.
+      const originalNodes = Array.from(actionBtn.childNodes);
       actionBtn.disabled = true;
       actionBtn.setAttribute('aria-busy', 'true');
       actionBtn.textContent = '';
 
-      const spinner = document.createElement('span');
-      spinner.className = 'spinner';
-      spinner.setAttribute('aria-hidden', 'true');
       actionBtn.appendChild(spinner);
       actionBtn.appendChild(document.createTextNode('Loading...'));
 
@@ -148,7 +171,8 @@
         // Reset state
         actionBtn.disabled = false;
         actionBtn.removeAttribute('aria-busy');
-        actionBtn.textContent = originalText;
+        actionBtn.textContent = '';
+        originalNodes.forEach(node => actionBtn.appendChild(node));
 
         // Show success with icon and transition
         // ✅ Sentinel: Using textContent and DOM methods instead of innerHTML
