@@ -100,6 +100,25 @@
       display: flex;
       align-items: center;
     }
+    .kbd-hint {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.1rem 0.3rem;
+      margin-left: 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      color: #3b82f6; /* matches a lighter variant of the button blue */
+      background-color: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 0.25rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    .btn:hover .kbd-hint {
+      background-color: #dbeafe;
+      border-color: #93c5fd;
+    }
   </style>
 </head>
 <body>
@@ -108,8 +127,8 @@
     <p>Sample accessible button component:</p>
 
     <!-- ✅ GOOD UX: Semantic button with proper labeling and focus handling -->
-    <button type="button" class="btn" id="action-btn">
-      Click Me (Accessible)
+    <button type="button" class="btn" id="action-btn" aria-keyshortcuts="Control+k Meta+k">
+      Click Me (Accessible) <kbd class="kbd-hint">⌘K</kbd>
     </button>
 
     <div id="feedback" class="feedback" aria-live="polite"></div>
@@ -131,8 +150,8 @@
       feedback.textContent = '';
 
       // Set loading state
-      // ✅ Sentinel: Avoid innerHTML to prevent XSS
-      const originalText = actionBtn.textContent;
+      // ✅ Sentinel: Avoid innerHTML to prevent XSS. Preserving child nodes.
+      const originalNodes = Array.from(actionBtn.childNodes);
       actionBtn.disabled = true;
       actionBtn.setAttribute('aria-busy', 'true');
       actionBtn.textContent = '';
@@ -148,7 +167,8 @@
         // Reset state
         actionBtn.disabled = false;
         actionBtn.removeAttribute('aria-busy');
-        actionBtn.textContent = originalText;
+        actionBtn.textContent = '';
+        originalNodes.forEach(node => actionBtn.appendChild(node));
 
         // Show success with icon and transition
         // ✅ Sentinel: Using textContent and DOM methods instead of innerHTML
@@ -196,6 +216,21 @@
           }, 300);
         }, 5000);
       }, 1500);
+    });
+
+    // Global keyboard shortcut
+    document.addEventListener('keydown', (event) => {
+      // Trigger on Ctrl+K or Cmd+K
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault(); // Prevent browser default like searching
+
+        // Only trigger if the button is not already disabled (loading)
+        if (!actionBtn.disabled) {
+          // Programmatically focus to show visual feedback to keyboard users
+          actionBtn.focus();
+          actionBtn.click();
+        }
+      }
     });
   </script>
 </body>
