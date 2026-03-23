@@ -6,3 +6,7 @@
 node_modules/
 # Env
 .env
+
+# Python
+__pycache__/
+.pytest_cache/
