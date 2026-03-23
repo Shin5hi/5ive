@@ -108,8 +108,8 @@
     <p>Sample accessible button component:</p>
 
     <!-- ✅ GOOD UX: Semantic button with proper labeling and focus handling -->
-    <button type="button" class="btn" id="action-btn">
-      Click Me (Accessible)
+    <button type="button" class="btn" id="action-btn" aria-keyshortcuts="Control+K Meta+K">
+      Click Me (<kbd>Ctrl</kbd>+<kbd>K</kbd>)
     </button>
 
     <div id="feedback" class="feedback" aria-live="polite"></div>
@@ -122,6 +122,17 @@
     const feedback = document.getElementById('feedback');
     let feedbackTimeout;
 
+    // ✅ GOOD UX: Global keyboard shortcut handler
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        actionBtn.focus();
+        if (!actionBtn.disabled) {
+          actionBtn.click();
+        }
+      }
+    });
+
     actionBtn.addEventListener('click', () => {
       // Clear any existing timeout
       if (feedbackTimeout) clearTimeout(feedbackTimeout);
@@ -132,7 +143,7 @@
 
       // Set loading state
       // ✅ Sentinel: Avoid innerHTML to prevent XSS
-      const originalText = actionBtn.textContent;
+      const originalNodes = Array.from(actionBtn.childNodes);
       actionBtn.disabled = true;
       actionBtn.setAttribute('aria-busy', 'true');
       actionBtn.textContent = '';
@@ -148,7 +159,8 @@
         // Reset state
         actionBtn.disabled = false;
         actionBtn.removeAttribute('aria-busy');
-        actionBtn.textContent = originalText;
+        actionBtn.textContent = '';
+        originalNodes.forEach(node => actionBtn.appendChild(node));
 
         // Show success with icon and transition
         // ✅ Sentinel: Using textContent and DOM methods instead of innerHTML
