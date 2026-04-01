@@ -108,8 +108,8 @@
     <p>Sample accessible button component:</p>
 
     <!-- ✅ GOOD UX: Semantic button with proper labeling and focus handling -->
-    <button type="button" class="btn" id="action-btn">
-      Click Me (Accessible)
+    <button type="button" class="btn" id="action-btn" aria-keyshortcuts="Control+Enter Meta+Enter">
+      Click Me (Accessible) <kbd>Cmd/Ctrl + Enter</kbd>
     </button>
 
     <div id="feedback" class="feedback" aria-live="polite"></div>
@@ -122,63 +122,62 @@
     const feedback = document.getElementById('feedback');
     let feedbackTimeout;
 
+    // Pre-create elements for optimization
+    const spinner = document.createElement('span');
+    spinner.className = 'spinner';
+    spinner.setAttribute('aria-hidden', 'true');
+    const loadingTextNode = document.createTextNode('Loading...');
+
+    const content = document.createElement('span');
+    content.className = 'feedback-content';
+
+    const icon = document.createElement('span');
+    icon.className = 'success-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = '✔';
+    content.appendChild(icon);
+    content.appendChild(document.createTextNode(' Action triggered successfully!'));
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'close-btn';
+    closeBtn.setAttribute('aria-label', 'Close notification');
+    closeBtn.textContent = '×';
+    closeBtn.onclick = () => {
+      if (feedbackTimeout) clearTimeout(feedbackTimeout);
+      feedback.classList.remove('visible');
+      setTimeout(() => {
+        if (!feedback.classList.contains('visible')) {
+          feedback.replaceChildren();
+        }
+      }, 300);
+    };
+
     actionBtn.addEventListener('click', () => {
       // Clear any existing timeout
       if (feedbackTimeout) clearTimeout(feedbackTimeout);
 
       // Reset feedback visual state
       feedback.classList.remove('visible');
-      feedback.textContent = '';
+      feedback.replaceChildren();
 
       // Set loading state
       // ✅ Sentinel: Avoid innerHTML to prevent XSS
-      const originalText = actionBtn.textContent;
+      // Preserve structural integrity by saving childNodes instead of textContent
+      const originalNodes = Array.from(actionBtn.childNodes);
       actionBtn.disabled = true;
       actionBtn.setAttribute('aria-busy', 'true');
-      actionBtn.textContent = '';
-
-      const spinner = document.createElement('span');
-      spinner.className = 'spinner';
-      spinner.setAttribute('aria-hidden', 'true');
-      actionBtn.appendChild(spinner);
-      actionBtn.appendChild(document.createTextNode('Loading...'));
+      actionBtn.replaceChildren(spinner, loadingTextNode);
 
       // Simulate async operation
       setTimeout(() => {
         // Reset state
         actionBtn.disabled = false;
         actionBtn.removeAttribute('aria-busy');
-        actionBtn.textContent = originalText;
+        actionBtn.replaceChildren(...originalNodes);
 
         // Show success with icon and transition
-        // ✅ Sentinel: Using textContent and DOM methods instead of innerHTML
-        feedback.textContent = '';
-
-        const content = document.createElement('span');
-        content.className = 'feedback-content';
-
-        const icon = document.createElement('span');
-        icon.className = 'success-icon';
-        icon.setAttribute('aria-hidden', 'true');
-        icon.textContent = '✔';
-        content.appendChild(icon);
-        content.appendChild(document.createTextNode(' Action triggered successfully!'));
-        feedback.appendChild(content);
-
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'close-btn';
-        closeBtn.setAttribute('aria-label', 'Close notification');
-        closeBtn.textContent = '×';
-        closeBtn.onclick = () => {
-          if (feedbackTimeout) clearTimeout(feedbackTimeout);
-          feedback.classList.remove('visible');
-          setTimeout(() => {
-            if (!feedback.classList.contains('visible')) {
-              feedback.textContent = '';
-            }
-          }, 300);
-        };
-        feedback.appendChild(closeBtn);
+        // ✅ Sentinel: Using replaceChildren and pre-created DOM elements
+        feedback.replaceChildren(content, closeBtn);
 
         // Trigger reflow/transition
         requestAnimationFrame(() => {
@@ -191,11 +190,22 @@
           // Wait for transition to finish
           setTimeout(() => {
             if (!feedback.classList.contains('visible')) {
-              feedback.textContent = '';
+              feedback.replaceChildren();
             }
           }, 300);
         }, 5000);
       }, 1500);
+    });
+
+    // Implement cross-platform keyboard shortcut logic
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        actionBtn.focus();
+        if (!actionBtn.disabled) {
+          actionBtn.click();
+        }
+      }
     });
   </script>
 </body>
