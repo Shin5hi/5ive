@@ -29,3 +29,8 @@ build/
 # Temporary files
 /tmp/
 *.tmp
+
+# Data files
+data/
+*.db
+*.sqlite
