@@ -101,6 +101,14 @@
       display: flex;
       align-items: center;
     }
+    .kbd-hint {
+      margin-left: 0.5rem;
+      padding: 0.1rem 0.3rem;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 0.25rem;
+      font-size: 0.75em;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
   </style>
 </head>
 <body>
@@ -109,8 +117,8 @@
     <p>Sample accessible button component:</p>
 
     <!-- ✅ GOOD UX: Semantic button with proper labeling and focus handling -->
-    <button type="button" class="btn" id="action-btn">
-      Click Me (Accessible)
+    <button type="button" class="btn" id="action-btn" aria-keyshortcuts="Control+Enter Meta+Enter">
+      Click Me (Accessible) <kbd class="kbd-hint" aria-hidden="true">Ctrl+Enter</kbd>
     </button>
 
     <div id="feedback" class="feedback" aria-live="polite"></div>
@@ -133,7 +141,8 @@
 
       // Set loading state
       // ✅ Sentinel: Avoid innerHTML to prevent XSS
-      const originalText = actionBtn.textContent;
+      // Save all child nodes to preserve HTML tags like <kbd>
+      const originalNodes = Array.from(actionBtn.childNodes);
       actionBtn.disabled = true;
       actionBtn.setAttribute('aria-busy', 'true');
       actionBtn.textContent = '';
@@ -149,7 +158,8 @@
         // Reset state
         actionBtn.disabled = false;
         actionBtn.removeAttribute('aria-busy');
-        actionBtn.textContent = originalText;
+        actionBtn.textContent = '';
+        originalNodes.forEach(node => actionBtn.appendChild(node));
 
         // Show success with icon and transition
         // ✅ Sentinel: Using textContent and DOM methods instead of innerHTML
@@ -197,6 +207,18 @@
           }, 300);
         }, 5000);
       }, 1500);
+    });
+
+    // Add keyboard shortcut listener
+    document.addEventListener('keydown', (e) => {
+      // Check for Ctrl+Enter or Meta+Enter
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        actionBtn.focus();
+        if (!actionBtn.disabled) {
+          actionBtn.click();
+        }
+      }
     });
   </script>
 </body>
