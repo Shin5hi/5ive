@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'sha256-fgxmLOznNmVf4GAd24jy5Eiv/Rer+7sVLOBqnsVx0nY='; script-src 'self' 'sha256-cPRnZP+O4z5KsN+vdFstQwgKExGtoN98I3Gq+Tm1aSA='; object-src 'none'; base-uri 'self'; upgrade-insecure-requests;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'sha256-fgxmLOznNmVf4GAd24jy5Eiv/Rer+7sVLOBqnsVx0nY='; script-src 'self' 'sha256-E6YwIcYv4T0ewlDim/DlacA0CIUVNZX0vexheX5SWRo='; object-src 'none'; base-uri 'self'; upgrade-insecure-requests;">
   <meta name="referrer" content="no-referrer">
   <title>5ive - UX Sample</title>
   <style>
@@ -109,8 +109,8 @@
     <p>Sample accessible button component:</p>
 
     <!-- ✅ GOOD UX: Semantic button with proper labeling and focus handling -->
-    <button type="button" class="btn" id="action-btn">
-      Click Me (Accessible)
+    <button type="button" class="btn" id="action-btn" aria-keyshortcuts="Control+K Meta+K">
+      Click Me <kbd>⌘K</kbd>
     </button>
 
     <div id="feedback" class="feedback" aria-live="polite"></div>
@@ -123,6 +123,18 @@
     const feedback = document.getElementById('feedback');
     let feedbackTimeout;
 
+    const spinner = document.createElement('span');
+    spinner.className = 'spinner';
+    spinner.setAttribute('aria-hidden', 'true');
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        actionBtn.focus();
+        actionBtn.click();
+      }
+    });
+
     actionBtn.addEventListener('click', () => {
       // Clear any existing timeout
       if (feedbackTimeout) clearTimeout(feedbackTimeout);
@@ -133,23 +145,18 @@
 
       // Set loading state
       // ✅ Sentinel: Avoid innerHTML to prevent XSS
-      const originalText = actionBtn.textContent;
+      const originalNodes = Array.from(actionBtn.childNodes);
       actionBtn.disabled = true;
       actionBtn.setAttribute('aria-busy', 'true');
-      actionBtn.textContent = '';
 
-      const spinner = document.createElement('span');
-      spinner.className = 'spinner';
-      spinner.setAttribute('aria-hidden', 'true');
-      actionBtn.appendChild(spinner);
-      actionBtn.appendChild(document.createTextNode('Loading...'));
+      actionBtn.replaceChildren(spinner, document.createTextNode('Loading...'));
 
       // Simulate async operation
       setTimeout(() => {
         // Reset state
         actionBtn.disabled = false;
         actionBtn.removeAttribute('aria-busy');
-        actionBtn.textContent = originalText;
+        actionBtn.replaceChildren(...originalNodes);
 
         // Show success with icon and transition
         // ✅ Sentinel: Using textContent and DOM methods instead of innerHTML
