@@ -109,8 +109,8 @@
     <p>Sample accessible button component:</p>
 
     <!-- ✅ GOOD UX: Semantic button with proper labeling and focus handling -->
-    <button type="button" class="btn" id="action-btn">
-      Click Me (Accessible)
+    <button type="button" class="btn" id="action-btn" aria-keyshortcuts="Control+K Meta+K">
+      Click Me (Accessible) <kbd>Ctrl/⌘</kbd>+<kbd>K</kbd>
     </button>
 
     <div id="feedback" class="feedback" aria-live="polite"></div>
@@ -123,6 +123,23 @@
     const feedback = document.getElementById('feedback');
     let feedbackTimeout;
 
+    // Pre-create loading elements
+    const spinner = document.createElement('span');
+    spinner.className = 'spinner';
+    spinner.setAttribute('aria-hidden', 'true');
+    const loadingText = document.createTextNode('Loading...');
+
+    // Keyboard shortcut listener
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        actionBtn.focus();
+        if (!actionBtn.disabled) {
+          actionBtn.click();
+        }
+      }
+    });
+
     actionBtn.addEventListener('click', () => {
       // Clear any existing timeout
       if (feedbackTimeout) clearTimeout(feedbackTimeout);
@@ -133,23 +150,18 @@
 
       // Set loading state
       // ✅ Sentinel: Avoid innerHTML to prevent XSS
-      const originalText = actionBtn.textContent;
+      // Use childNodes and replaceChildren to preserve HTML elements like <kbd>
+      const originalNodes = Array.from(actionBtn.childNodes);
       actionBtn.disabled = true;
       actionBtn.setAttribute('aria-busy', 'true');
-      actionBtn.textContent = '';
-
-      const spinner = document.createElement('span');
-      spinner.className = 'spinner';
-      spinner.setAttribute('aria-hidden', 'true');
-      actionBtn.appendChild(spinner);
-      actionBtn.appendChild(document.createTextNode('Loading...'));
+      actionBtn.replaceChildren(spinner, loadingText);
 
       // Simulate async operation
       setTimeout(() => {
         // Reset state
         actionBtn.disabled = false;
         actionBtn.removeAttribute('aria-busy');
-        actionBtn.textContent = originalText;
+        actionBtn.replaceChildren(...originalNodes);
 
         // Show success with icon and transition
         // ✅ Sentinel: Using textContent and DOM methods instead of innerHTML
