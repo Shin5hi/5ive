@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'sha256-fgxmLOznNmVf4GAd24jy5Eiv/Rer+7sVLOBqnsVx0nY='; script-src 'self' 'sha256-cPRnZP+O4z5KsN+vdFstQwgKExGtoN98I3Gq+Tm1aSA='; object-src 'none'; base-uri 'self'; upgrade-insecure-requests;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'sha256-fgxmLOznNmVf4GAd24jy5Eiv/Rer+7sVLOBqnsVx0nY='; script-src 'self' 'sha256-61jrXbfj5EKN5+uuEHeR+9G45d8cgtR6QJb8oOsZ1sc='; object-src 'none'; base-uri 'self'; upgrade-insecure-requests;">
   <meta name="referrer" content="no-referrer">
   <title>5ive - UX Sample</title>
   <style>
@@ -109,8 +109,8 @@
     <p>Sample accessible button component:</p>
 
     <!-- ✅ GOOD UX: Semantic button with proper labeling and focus handling -->
-    <button type="button" class="btn" id="action-btn">
-      Click Me (Accessible)
+    <button type="button" class="btn" id="action-btn" aria-keyshortcuts="Control+Enter Meta+Enter">
+      Click Me (<kbd>Ctrl</kbd>+<kbd>Enter</kbd>)
     </button>
 
     <div id="feedback" class="feedback" aria-live="polite"></div>
@@ -121,7 +121,51 @@
   <script>
     const actionBtn = document.getElementById('action-btn');
     const feedback = document.getElementById('feedback');
+
+    // Global cached elements for performance
+    const spinner = document.createElement('span');
+    spinner.className = 'spinner';
+    spinner.setAttribute('aria-hidden', 'true');
+
+    const content = document.createElement('span');
+    content.className = 'feedback-content';
+
+    const icon = document.createElement('span');
+    icon.className = 'success-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = '✔';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'close-btn';
+    closeBtn.setAttribute('aria-label', 'Close notification');
+    closeBtn.textContent = '×';
     let feedbackTimeout;
+
+    // Global cached listener for close button
+    closeBtn.onclick = () => {
+      if (feedbackTimeout) clearTimeout(feedbackTimeout);
+      feedback.classList.remove('visible');
+      setTimeout(() => {
+        if (!feedback.classList.contains('visible')) {
+          feedback.replaceChildren();
+        }
+      }, 300);
+    };
+
+    // Pre-assemble static content
+    content.appendChild(icon);
+    content.appendChild(document.createTextNode(' Action triggered successfully!'));
+
+    // Global keyboard listener for shortcut
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        actionBtn.focus();
+        if (!actionBtn.disabled) {
+          actionBtn.click();
+        }
+      }
+    });
 
     actionBtn.addEventListener('click', () => {
       // Clear any existing timeout
@@ -129,57 +173,25 @@
 
       // Reset feedback visual state
       feedback.classList.remove('visible');
-      feedback.textContent = '';
+      feedback.replaceChildren();
 
       // Set loading state
-      // ✅ Sentinel: Avoid innerHTML to prevent XSS
-      const originalText = actionBtn.textContent;
+      // ✅ Sentinel: Using childNodes and replaceChildren instead of textContent/innerHTML to preserve nested structure
+      const originalNodes = Array.from(actionBtn.childNodes);
       actionBtn.disabled = true;
       actionBtn.setAttribute('aria-busy', 'true');
-      actionBtn.textContent = '';
 
-      const spinner = document.createElement('span');
-      spinner.className = 'spinner';
-      spinner.setAttribute('aria-hidden', 'true');
-      actionBtn.appendChild(spinner);
-      actionBtn.appendChild(document.createTextNode('Loading...'));
+      actionBtn.replaceChildren(spinner, document.createTextNode('Loading...'));
 
       // Simulate async operation
       setTimeout(() => {
         // Reset state
         actionBtn.disabled = false;
         actionBtn.removeAttribute('aria-busy');
-        actionBtn.textContent = originalText;
+        actionBtn.replaceChildren(...originalNodes);
 
         // Show success with icon and transition
-        // ✅ Sentinel: Using textContent and DOM methods instead of innerHTML
-        feedback.textContent = '';
-
-        const content = document.createElement('span');
-        content.className = 'feedback-content';
-
-        const icon = document.createElement('span');
-        icon.className = 'success-icon';
-        icon.setAttribute('aria-hidden', 'true');
-        icon.textContent = '✔';
-        content.appendChild(icon);
-        content.appendChild(document.createTextNode(' Action triggered successfully!'));
-        feedback.appendChild(content);
-
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'close-btn';
-        closeBtn.setAttribute('aria-label', 'Close notification');
-        closeBtn.textContent = '×';
-        closeBtn.onclick = () => {
-          if (feedbackTimeout) clearTimeout(feedbackTimeout);
-          feedback.classList.remove('visible');
-          setTimeout(() => {
-            if (!feedback.classList.contains('visible')) {
-              feedback.textContent = '';
-            }
-          }, 300);
-        };
-        feedback.appendChild(closeBtn);
+        feedback.replaceChildren(content, closeBtn);
 
         // Trigger reflow/transition
         requestAnimationFrame(() => {
@@ -192,7 +204,7 @@
           // Wait for transition to finish
           setTimeout(() => {
             if (!feedback.classList.contains('visible')) {
-              feedback.textContent = '';
+              feedback.replaceChildren();
             }
           }, 300);
         }, 5000);
