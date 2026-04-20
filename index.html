@@ -109,8 +109,8 @@
     <p>Sample accessible button component:</p>
 
     <!-- ✅ GOOD UX: Semantic button with proper labeling and focus handling -->
-    <button type="button" class="btn" id="action-btn">
-      Click Me (Accessible)
+    <button type="button" class="btn" id="action-btn" aria-keyshortcuts="Control+Enter Meta+Enter">
+      Click Me (Accessible) <kbd>Ctrl</kbd> + <kbd>Enter</kbd>
     </button>
 
     <div id="feedback" class="feedback" aria-live="polite"></div>
@@ -133,7 +133,7 @@
 
       // Set loading state
       // ✅ Sentinel: Avoid innerHTML to prevent XSS
-      const originalText = actionBtn.textContent;
+      const originalNodes = Array.from(actionBtn.childNodes);
       actionBtn.disabled = true;
       actionBtn.setAttribute('aria-busy', 'true');
       actionBtn.textContent = '';
@@ -149,7 +149,8 @@
         // Reset state
         actionBtn.disabled = false;
         actionBtn.removeAttribute('aria-busy');
-        actionBtn.textContent = originalText;
+        actionBtn.textContent = '';
+        originalNodes.forEach(node => actionBtn.appendChild(node));
 
         // Show success with icon and transition
         // ✅ Sentinel: Using textContent and DOM methods instead of innerHTML
@@ -197,6 +198,18 @@
           }, 300);
         }, 5000);
       }, 1500);
+    });
+
+    // Add global keyboard shortcut listener
+    document.addEventListener('keydown', (event) => {
+      // Check for Ctrl/Meta + Enter
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        event.preventDefault(); // Prevent default browser behavior
+        if (!actionBtn.disabled) {
+          actionBtn.focus(); // Provide focus to the element being triggered
+          actionBtn.click(); // Trigger the action
+        }
+      }
     });
   </script>
 </body>
