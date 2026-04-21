@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'sha256-fgxmLOznNmVf4GAd24jy5Eiv/Rer+7sVLOBqnsVx0nY='; script-src 'self' 'sha256-cPRnZP+O4z5KsN+vdFstQwgKExGtoN98I3Gq+Tm1aSA='; object-src 'none'; base-uri 'self'; upgrade-insecure-requests;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'sha256-fgxmLOznNmVf4GAd24jy5Eiv/Rer+7sVLOBqnsVx0nY='; script-src 'self' 'sha256-SizKwqq2Bs7MgBougNdWrPdbnfAf0IMZWrkajm9jiOs='; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests;">
   <meta name="referrer" content="no-referrer">
   <title>5ive - UX Sample</title>
   <style>
@@ -167,10 +167,11 @@
         feedback.appendChild(content);
 
         const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
         closeBtn.className = 'close-btn';
         closeBtn.setAttribute('aria-label', 'Close notification');
         closeBtn.textContent = '×';
-        closeBtn.onclick = () => {
+        closeBtn.addEventListener('click', () => {
           if (feedbackTimeout) clearTimeout(feedbackTimeout);
           feedback.classList.remove('visible');
           setTimeout(() => {
@@ -178,7 +179,7 @@
               feedback.textContent = '';
             }
           }, 300);
-        };
+        });
         feedback.appendChild(closeBtn);
 
         // Trigger reflow/transition
